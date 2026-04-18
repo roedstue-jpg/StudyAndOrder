@@ -1,0 +1,55 @@
+﻿<UserControl x:Class="StudyAndOrder.Wpf.Views.OrdersScreen"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="450" d:DesignWidth="800">
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Button Grid.Row="0"
+                Content="Created Study"
+                Padding="12,6"
+                Command="{Binding CreatedStudyCommand}"
+                Width="160"/>
+
+        <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding Rows}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  Margin="0,10,0,0">
+
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Study_ID" Binding="{Binding Study_ID}" Width="*"/>
+                <DataGridTextColumn Header="Order_number" Binding="{Binding Order_number}" Width="*"/>
+                <DataGridTextColumn Header="Facility" Binding="{Binding Facility}" Width="*"/>
+                <DataGridTextColumn Header="Material_Number" Binding="{Binding Material_Number}" Width="*"/>
+                <DataGridTextColumn Header="Process_Order_Type" Binding="{Binding Process_Order_Type}" Width="*"/>
+
+                <DataGridTextColumn Header="From_Date" Binding="{Binding From_Date}" Width="*"/>
+                <DataGridTextColumn Header="To_Date" Binding="{Binding To_Date}" Width="*"/>
+
+                <DataGridTextColumn Header="Ingoing_Material" Binding="{Binding Ingoing_Material}" Width="*"/>
+                <DataGridTextColumn Header="Batch_Number" Binding="{Binding Batch_Number}" Width="*"/>
+                <DataGridTextColumn Header="Amount" Binding="{Binding Amount}" Width="*"/>
+
+                <DataGridTextColumn Header="Expected_Outcome" Binding="{Binding Expected_Outcome}" Width="*"/>
+                <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="*"/>
+                <DataGridTextColumn Header="Equipment" Binding="{Binding Equipment}" Width="*"/>
+
+                <DataGridCheckBoxColumn Header="Data_Equipment_Validation" Binding="{Binding Data_Equipment_Validation}" Width="*"/>
+                <DataGridCheckBoxColumn Header="Sampling_Stock" Binding="{Binding Sampling_Stock}" Width="*"/>
+
+                <DataGridTextColumn Header="WBS" Binding="{Binding WBS}" Width="*"/>
+                <DataGridTextColumn Header="Cost_Center" Binding="{Binding Cost_Center}" Width="*"/>
+                <DataGridTextColumn Header="Creation_Date" Binding="{Binding Creation_Date}" Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

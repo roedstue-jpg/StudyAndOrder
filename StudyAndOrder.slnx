@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="StudyAndOrder.Core/StudyAndOrder.Core.csproj" />
+  <Project Path="StudyAndOrder.Wpf/StudyAndOrder.Wpf.csproj" Id="025cf8ee-bdba-487a-af4e-aedaebab0a80" />
+</Solution>

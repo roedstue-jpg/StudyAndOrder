@@ -1,0 +1,159 @@
+﻿<UserControl x:Class="StudyAndOrder.Wpf.Views.OrderDetailsScreen"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="650" d:DesignWidth="1000">
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,10">
+            <TextBlock FontSize="18" FontWeight="Bold" Text="OrderDetailsScreen" />
+            <TextBlock Margin="20,0,0,0" Text="{Binding CurrentStudyCode, StringFormat=Study_ID: {0}}"/>
+            <TextBlock Margin="20,0,0,0" Text="{Binding CurrentOrderNumber, StringFormat=Order_number: {0}}"/>
+        </StackPanel>
+
+        <!-- Content -->
+        <ScrollViewer Grid.Row="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="340"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Produceret materiale -->
+                <GroupBox Header="Produktmateriale (produceret)" Grid.Column="0" Margin="0,0,10,0">
+                    <StackPanel Margin="10">
+                        <TextBlock Text="Material_Number"/>
+                        <ComboBox ItemsSource="{Binding MaterialsList}"
+                                  SelectedValue="{Binding ProducedMaterialNumber, UpdateSourceTrigger=PropertyChanged}"
+                                  SelectedValuePath="MaterialNumber"
+                                  DisplayMemberPath="MaterialNumber"
+                                  Width="250"/>
+
+                        <TextBlock Margin="0,10,0,0" Text="Expected_Outcome"/>
+                        <TextBox Width="250"
+                                 Text="{Binding ExpectedOutcome, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <TextBlock Margin="0,10,0,0" Text="Equipment (multi-select)"/>
+
+                        <ItemsControl ItemsSource="{Binding EquipmentOptions}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox IsChecked="{Binding IsSelected}"
+                                              Content="{Binding Equipment.EquipmentId}"
+                                              Margin="0,2,0,2"
+                                              ToolTip="{Binding Equipment.Description}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </GroupBox>
+
+                <!-- Ingoing materials -->
+                <GroupBox Header="Ingoing Materials" Grid.Column="1">
+                    <Grid Margin="10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <Button Content="+ Add material"
+                                Command="{Binding AddIngoingMaterialCommand}"
+                                Width="160"
+                                Margin="0,0,0,10"/>
+
+                        <ItemsControl Grid.Row="1" ItemsSource="{Binding IngoingLines}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="#DDD" BorderThickness="1" Padding="8" Margin="0,8,0,0">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="260"/>
+                                                <ColumnDefinition Width="160"/>
+                                                <ColumnDefinition Width="160"/>
+                                                <ColumnDefinition Width="40"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBlock Text="Material" Grid.Column="0" VerticalAlignment="Top"/>
+
+                                            <ComboBox Grid.Column="0"
+                                                      Margin="0,18,0,0"
+                                                      ItemsSource="{Binding DataContext.MaterialsList, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                      SelectedValue="{Binding IngoingMaterial, UpdateSourceTrigger=PropertyChanged}"
+                                                      SelectedValuePath="MaterialNumber"
+                                                      DisplayMemberPath="MaterialNumber"
+                                                      Width="240"/>
+
+                                            <TextBlock Text="Batch (optional)" Grid.Column="1" VerticalAlignment="Top"/>
+
+                                            <TextBox Grid.Column="1"
+                                                     Margin="0,18,0,0"
+                                                     Text="{Binding BatchNumber, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                            <TextBlock Text="Amount (optional)" Grid.Column="2" VerticalAlignment="Top"/>
+
+                                            <TextBox Grid.Column="2"
+                                                     Margin="0,18,0,0"
+                                                     Text="{Binding Amount, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                            <Button Grid.Column="3"
+                                                    Margin="0,14,0,0"
+                                                    Content="🗑"
+                                                    Width="32"
+                                                    Height="32"
+                                                    Command="{Binding DataContext.RemoveIngoingMaterialCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Grid>
+                </GroupBox>
+            </Grid>
+        </ScrollViewer>
+
+       
+        <DockPanel Grid.Row="2" Margin="0,10,0,0" LastChildFill="False">
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                <Button Content="Back"
+                Command="{Binding BackOrderCommand}"
+                Padding="12,6"
+                Width="90"
+                Margin="0,0,10,0"/>
+
+                <Button Content="Next"
+                Command="{Binding NextOrderCommand}"
+                Padding="12,6"
+                Width="90"
+                Margin="0,0,10,0"/>
+
+                <Button Content="Created new order"
+                Command="{Binding CreatedNewOrderCommand}"
+                Padding="12,6"
+                Width="200"
+                Margin="0,0,10,0"/>
+
+                <Button Content="Cancelled Order"
+                Command="{Binding CancelledOrderCommand}"
+                Padding="12,6"
+                Width="160"/>
+            </StackPanel>
+
+            <Button Content="Submit"
+            Command="{Binding SubmitCommand}"
+            DockPanel.Dock="Right"
+            Padding="12,6"
+            Width="140"/>
+        </DockPanel>
+        
+    </Grid>
+</UserControl>
