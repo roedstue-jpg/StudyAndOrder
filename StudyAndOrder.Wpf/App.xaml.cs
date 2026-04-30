@@ -20,7 +20,7 @@ namespace StudyAndOrder.Wpf
                 {
                     services.AddDbContext<AppDbContext>(options =>
                         options.UseSqlServer(
-                            "Server=(localdb)\\mssqllocaldb;Database=SOMS_Db;Trusted_Connection=True;"));
+                            "Server=(localdb)\\MyLocalDB;Database=SOMS_Db;Trusted_Connection=True;"));
 
                     services.AddScoped<IMaterialRepository, MaterialRepository>();
                     services.AddScoped<IEquipmentRepository, EquipmentRepository>();

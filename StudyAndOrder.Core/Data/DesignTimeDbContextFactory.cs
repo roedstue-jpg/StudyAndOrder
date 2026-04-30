@@ -9,7 +9,7 @@ namespace StudyAndOrder.Core.Data
         {
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
             optionsBuilder.UseSqlServer(
-                "Server=(localdb)\\mssqllocaldb;Database=SOMS_Db;Trusted_Connection=True;");
+                "Server=(localdb)\\MyLocalDB;Database=SOMS_Db;Trusted_Connection=True;");
 
             return new AppDbContext(optionsBuilder.Options);
         }

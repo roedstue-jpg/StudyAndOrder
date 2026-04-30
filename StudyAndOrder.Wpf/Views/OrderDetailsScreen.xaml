@@ -44,16 +44,13 @@
 
                         <TextBlock Margin="0,10,0,0" Text="Equipment (multi-select)"/>
 
-                        <ItemsControl ItemsSource="{Binding EquipmentOptions}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <CheckBox IsChecked="{Binding IsSelected}"
-                                              Content="{Binding Equipment.EquipmentId}"
-                                              Margin="0,2,0,2"
-                                              ToolTip="{Binding Equipment.Description}"/>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                        <ComboBox
+                        ItemsSource="{Binding EquipmentOptions}"
+                        SelectedValuePath="Equipment.EquipmentId"
+                        SelectedValue="{Binding SelectedEquipmentId, UpdateSourceTrigger=PropertyChanged}"
+                        DisplayMemberPath="Equipment.EquipmentId"
+                        Width="250"
+                        />
                     </StackPanel>
                 </GroupBox>
 

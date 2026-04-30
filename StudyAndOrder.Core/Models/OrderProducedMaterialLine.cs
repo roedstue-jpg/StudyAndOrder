@@ -19,5 +19,6 @@ namespace StudyAndOrder.Core.Models
 
         // Multi-select equipment knyttet til det producerede materiale
         public ICollection<Equipment> Equipments { get; set; } = new List<Equipment>();
+
     }
 }

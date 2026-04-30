@@ -297,14 +297,14 @@ namespace StudyAndOrder.Wpf.ViewModels
             order.ProducedMaterial.MaterialNumber = ProducedMaterialNumber;
             order.ProducedMaterial.ExpectedOutcome = ExpectedOutcome;
 
-            var selectedEquipments = EquipmentOptions
-                .Where(x => x.IsSelected)
-                .Select(x => x.Equipment)
-                .ToList();
-
             order.ProducedMaterial.Equipments.Clear();
-            foreach (var eq in selectedEquipments)
-                order.ProducedMaterial.Equipments.Add(eq);
+
+            if (!string.IsNullOrWhiteSpace(SelectedEquipmentId))
+            {
+                var eq = EquipmentOptions.FirstOrDefault(x => x.Equipment.EquipmentId == SelectedEquipmentId)?.Equipment;
+                if (eq != null)
+                    order.ProducedMaterial.Equipments.Add(eq);
+            }
 
             order.IngoingMaterials.Clear();
             foreach (var line in IngoingLines)
@@ -341,6 +341,13 @@ namespace StudyAndOrder.Wpf.ViewModels
             await _db.SaveChangesAsync();
 
             SetContext(CurrentStudyDbId, CurrentStudyCode, order.Id, order.OrderNumber);
+        }
+
+        private string _selectedEquipmentId = "";
+        public string SelectedEquipmentId
+        {
+            get => _selectedEquipmentId;
+            set => SetProperty(ref _selectedEquipmentId, value);
         }
 
         private async Task CancelCurrentOrderAsync()
