@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Input;
+using Microsoft.EntityFrameworkCore;
 using StudyAndOrder.Core.Models;
 using StudyAndOrder.Core.Enums;
 using StudyAndOrder.Core.Data;
@@ -57,12 +58,19 @@ namespace StudyAndOrder.Wpf.ViewModels
 
             CreatedOrderCommand = new RelayCommand(async _ => await CreateStudyAndFirstOrderAsync());
         }
-        
+
         private async System.Threading.Tasks.Task CreateStudyAndFirstOrderAsync()
         {
-            // Generér Study_ID og Order_number automatisk
             var studyIdCode = "ST-" + Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
             var orderNumber = "ORD-" + Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+
+            // 1) Hent en eksisterende Material (default) så FK'en kan opfyldes
+            var defaultMaterial = await _db.Materials
+                .OrderBy(m => m.MaterialNumber)
+                .FirstOrDefaultAsync();
+
+            if (defaultMaterial == null)
+                throw new InvalidOperationException("Ingen Materials findes i SOMS_Db. Seed mangler.");
 
             var study = new Study
             {
@@ -85,18 +93,16 @@ namespace StudyAndOrder.Wpf.ViewModels
                 Study = study,
                 ProducedMaterial = new OrderProducedMaterialLine
                 {
-                    MaterialNumber = string.Empty,
+                    MaterialId = defaultMaterial.Id,     // ✅ vigtigt pga. FK + NOT NULL
                     ExpectedOutcome = string.Empty
-                    // Equipments udfylder vi senere i OrderDetailsScreen
                 }
             };
 
             study.Orders.Add(order);
-
             _db.Studies.Add(study);
+
             await _db.SaveChangesAsync();
 
-            // study.Id og order.Id er nu udfyldt
             OrderDetailsRequested?.Invoke(study.Id, study.StudyId, order.Id, order.OrderNumber);
         }
         public void Reset()

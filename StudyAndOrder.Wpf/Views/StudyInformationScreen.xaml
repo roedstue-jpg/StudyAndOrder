@@ -46,7 +46,7 @@
                   SelectedItem="{Binding Facility, UpdateSourceTrigger=PropertyChanged}">
             <ComboBoxItem Content="Alpha"/>
             <ComboBoxItem Content="Omega"/>
-            <ComboBoxItem Content="Alpha and/or Omega"/>
+            <ComboBoxItem Content="Alpha and Omega"/>
         </ComboBox>
 
         <!-- Row 4 -->

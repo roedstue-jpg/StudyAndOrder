@@ -12,8 +12,8 @@ namespace StudyAndOrder.Wpf.ViewModels
     public class EquipmentSelectionVm : BaseViewModel
     {
         public Equipment Equipment { get; }
-
         private bool _isSelected;
+
         public bool IsSelected
         {
             get => _isSelected;
@@ -61,7 +61,6 @@ namespace StudyAndOrder.Wpf.ViewModels
             _db = db;
 
             AddIngoingMaterialCommand = new RelayCommand(_ => IngoingLines.Add(new IngoingMaterialLineVm()));
-
             RemoveIngoingMaterialCommand = new RelayCommand(line =>
             {
                 if (line is IngoingMaterialLineVm vm)
@@ -69,11 +68,9 @@ namespace StudyAndOrder.Wpf.ViewModels
             });
 
             SubmitCommand = new RelayCommand(async _ => await SubmitAsync(), _ => true);
-
             CreatedNewOrderCommand = new RelayCommand(async _ => await CreateNewOrderAsync());
             CancelledOrderCommand = new RelayCommand(async _ => await CancelCurrentOrderAsync());
 
-            // Next/Back commands
             BackOrderCommand = new RelayCommand(async _ => await GoToBackOrderAsync(), _ => CanGoBack);
             NextOrderCommand = new RelayCommand(async _ => await GoToNextOrderAsync(), _ => CanGoNext);
         }
@@ -120,7 +117,6 @@ namespace StudyAndOrder.Wpf.ViewModels
         // Commands
         public ICommand AddIngoingMaterialCommand { get; }
         public ICommand RemoveIngoingMaterialCommand { get; }
-
         public ICommand SubmitCommand { get; }
         public ICommand CreatedNewOrderCommand { get; }
         public ICommand CancelledOrderCommand { get; }
@@ -188,8 +184,10 @@ namespace StudyAndOrder.Wpf.ViewModels
             foreach (var e in equipments)
                 EquipmentOptions.Add(new EquipmentSelectionVm(e));
 
-            // load order
+            // load order (inkluder Material + Equipments + ingoing)
             var order = await _db.Orders
+                .Include(o => o.ProducedMaterial)
+                    .ThenInclude(pm => pm!.Material)
                 .Include(o => o.ProducedMaterial)
                     .ThenInclude(pm => pm!.Equipments)
                 .Include(o => o.IngoingMaterials)
@@ -204,7 +202,7 @@ namespace StudyAndOrder.Wpf.ViewModels
 
             if (order.ProducedMaterial != null)
             {
-                ProducedMaterialNumber = order.ProducedMaterial.MaterialNumber;
+                ProducedMaterialNumber = order.ProducedMaterial.Material?.MaterialNumber ?? "";
                 ExpectedOutcome = order.ProducedMaterial.ExpectedOutcome;
 
                 var equipmentIds = order.ProducedMaterial.Equipments?
@@ -228,7 +226,6 @@ namespace StudyAndOrder.Wpf.ViewModels
                 }
             }
 
-            // set Next/Back flags (OrderNumber = B)
             await UpdateNavigationFlagsAsync();
         }
 
@@ -236,12 +233,11 @@ namespace StudyAndOrder.Wpf.ViewModels
         {
             var ordersInStudy = await _db.Orders
                 .Where(o => o.StudyId == CurrentStudyDbId)
-                .OrderBy(o => o.OrderNumber) // B: OrderNumber rækkefølge
+                .OrderBy(o => o.OrderNumber)
                 .Select(o => new { o.Id })
                 .ToListAsync();
 
             var index = ordersInStudy.FindIndex(o => o.Id == CurrentOrderDbId);
-
             CanGoBack = index > 0;
             CanGoNext = index >= 0 && index < ordersInStudy.Count - 1;
         }
@@ -252,7 +248,7 @@ namespace StudyAndOrder.Wpf.ViewModels
 
             var ordersInStudy = await _db.Orders
                 .Where(o => o.StudyId == CurrentStudyDbId)
-                .OrderBy(o => o.OrderNumber) // B
+                .OrderBy(o => o.OrderNumber)
                 .ToListAsync();
 
             var index = ordersInStudy.FindIndex(o => o.Id == CurrentOrderDbId);
@@ -268,7 +264,7 @@ namespace StudyAndOrder.Wpf.ViewModels
 
             var ordersInStudy = await _db.Orders
                 .Where(o => o.StudyId == CurrentStudyDbId)
-                .OrderBy(o => o.OrderNumber) // B
+                .OrderBy(o => o.OrderNumber)
                 .ToListAsync();
 
             var index = ordersInStudy.FindIndex(o => o.Id == CurrentOrderDbId);
@@ -289,24 +285,55 @@ namespace StudyAndOrder.Wpf.ViewModels
             if (order == null)
                 return;
 
+            // Ensure ProducedMaterial exists
             if (order.ProducedMaterial == null)
             {
-                order.ProducedMaterial = new OrderProducedMaterialLine { OrderId = order.Id };
+                // default material to satisfy NOT NULL FK
+                var defaultMaterial = await _db.Materials
+                    .OrderBy(m => m.MaterialNumber)
+                    .FirstOrDefaultAsync();
+
+                if (defaultMaterial == null)
+                    throw new InvalidOperationException("Ingen Materials findes i SOMS_Db. Seed mangler.");
+
+                order.ProducedMaterial = new OrderProducedMaterialLine
+                {
+                    OrderId = order.Id,
+                    MaterialId = defaultMaterial.Id,
+                    ExpectedOutcome = string.Empty
+                };
             }
 
-            order.ProducedMaterial.MaterialNumber = ProducedMaterialNumber;
+            // Set produced material (FK)
+            var selectedMaterial = await _db.Materials
+                .FirstOrDefaultAsync(m => m.MaterialNumber == ProducedMaterialNumber);
+
+            if (selectedMaterial != null)
+            {
+                order.ProducedMaterial.MaterialId = selectedMaterial.Id;
+                order.ProducedMaterial.Material = selectedMaterial;
+            }
+            else
+            {
+                // if user cleared it or invalid value: keep existing MaterialId
+                // (or optionally throw, but we keep it robust)
+            }
+
             order.ProducedMaterial.ExpectedOutcome = ExpectedOutcome;
 
+            // Save equipments based on checkbox selections (your XAML uses IsSelected)
+            var selectedEquipments = EquipmentOptions
+                .Where(x => x.IsSelected)
+                .Select(x => x.Equipment)
+                .ToList();
+
             order.ProducedMaterial.Equipments.Clear();
+            foreach (var eq in selectedEquipments)
+                order.ProducedMaterial.Equipments.Add(eq);
 
-            if (!string.IsNullOrWhiteSpace(SelectedEquipmentId))
-            {
-                var eq = EquipmentOptions.FirstOrDefault(x => x.Equipment.EquipmentId == SelectedEquipmentId)?.Equipment;
-                if (eq != null)
-                    order.ProducedMaterial.Equipments.Add(eq);
-            }
-
+            // Save ingoing material lines
             order.IngoingMaterials.Clear();
+
             foreach (var line in IngoingLines)
             {
                 if (string.IsNullOrWhiteSpace(line.IngoingMaterial))
@@ -327,6 +354,13 @@ namespace StudyAndOrder.Wpf.ViewModels
 
         private async Task CreateNewOrderAsync()
         {
+            var defaultMaterial = await _db.Materials
+                .OrderBy(m => m.MaterialNumber)
+                .FirstOrDefaultAsync();
+
+            if (defaultMaterial == null)
+                throw new InvalidOperationException("Ingen Materials findes i SOMS_Db. Seed mangler.");
+
             var newOrderNumber = "ORD-" + Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
 
             var order = new Order
@@ -334,20 +368,18 @@ namespace StudyAndOrder.Wpf.ViewModels
                 StudyId = CurrentStudyDbId,
                 OrderNumber = newOrderNumber,
                 CreationDate = DateTime.Now,
-                ProducedMaterial = new OrderProducedMaterialLine()
+                // IMPORTANT: set MaterialId (NOT NULL FK)
+                ProducedMaterial = new OrderProducedMaterialLine
+                {
+                    MaterialId = defaultMaterial.Id,
+                    ExpectedOutcome = string.Empty
+                }
             };
 
             _db.Orders.Add(order);
             await _db.SaveChangesAsync();
 
             SetContext(CurrentStudyDbId, CurrentStudyCode, order.Id, order.OrderNumber);
-        }
-
-        private string _selectedEquipmentId = "";
-        public string SelectedEquipmentId
-        {
-            get => _selectedEquipmentId;
-            set => SetProperty(ref _selectedEquipmentId, value);
         }
 
         private async Task CancelCurrentOrderAsync()
@@ -368,7 +400,6 @@ namespace StudyAndOrder.Wpf.ViewModels
 
             if (otherOrder != null)
             {
-                // (B was chosen for Next/Back; Cancel uses "first other" behavior)
                 SetContext(CurrentStudyDbId, CurrentStudyCode, otherOrder.Id, otherOrder.OrderNumber);
             }
             else

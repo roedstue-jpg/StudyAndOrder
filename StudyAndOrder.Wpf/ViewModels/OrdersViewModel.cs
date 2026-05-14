@@ -48,7 +48,7 @@ namespace StudyAndOrder.Wpf.ViewModels
                 {
                     var produced = order.ProducedMaterial;
 
-                    var materialNumber = produced?.MaterialNumber ?? "";
+                    var materialNumber = produced?.Material?.MaterialNumber ?? "";
                     var expectedOutcome = produced?.ExpectedOutcome ?? "";
 
                     var equipmentText = (produced?.Equipments == null || !produced.Equipments.Any())

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StudyAndOrder.Core.Data;
 
@@ -11,9 +12,11 @@ using StudyAndOrder.Core.Data;
 namespace StudyAndOrder.Core.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260502160304_AddMaterialRelation")]
+    partial class AddMaterialRelation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -56,6 +59,38 @@ namespace StudyAndOrder.Core.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Materials");
+                });
+
+            modelBuilder.Entity("OrderProducedMaterialLine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ExpectedOutcome")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("MaterialId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MaterialNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MaterialId");
+
+                    b.HasIndex("OrderId")
+                        .IsUnique();
+
+                    b.ToTable("OrderProducedMaterialLine");
                 });
 
             modelBuilder.Entity("StudyAndOrder.Core.Models.Equipment", b =>
@@ -134,34 +169,6 @@ namespace StudyAndOrder.Core.Migrations
                     b.ToTable("Orders");
                 });
 
-            modelBuilder.Entity("StudyAndOrder.Core.Models.OrderProducedMaterialLine", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ExpectedOutcome")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("MaterialId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("OrderId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MaterialId");
-
-                    b.HasIndex("OrderId")
-                        .IsUnique();
-
-                    b.ToTable("OrderProducedMaterialLine");
-                });
-
             modelBuilder.Entity("StudyAndOrder.Core.Models.Study", b =>
                 {
                     b.Property<int>("Id")
@@ -219,11 +226,29 @@ namespace StudyAndOrder.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("StudyAndOrder.Core.Models.OrderProducedMaterialLine", null)
+                    b.HasOne("OrderProducedMaterialLine", null)
                         .WithMany()
                         .HasForeignKey("ProducedMaterialLinesId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("OrderProducedMaterialLine", b =>
+                {
+                    b.HasOne("Material", "Material")
+                        .WithMany("ProducedMaterialLines")
+                        .HasForeignKey("MaterialId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("StudyAndOrder.Core.Models.Order", "Order")
+                        .WithOne("ProducedMaterial")
+                        .HasForeignKey("OrderProducedMaterialLine", "OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Material");
+
+                    b.Navigation("Order");
                 });
 
             modelBuilder.Entity("StudyAndOrder.Core.Models.IngoingMaterial", b =>
@@ -246,25 +271,6 @@ namespace StudyAndOrder.Core.Migrations
                         .IsRequired();
 
                     b.Navigation("Study");
-                });
-
-            modelBuilder.Entity("StudyAndOrder.Core.Models.OrderProducedMaterialLine", b =>
-                {
-                    b.HasOne("Material", "Material")
-                        .WithMany("ProducedMaterialLines")
-                        .HasForeignKey("MaterialId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("StudyAndOrder.Core.Models.Order", "Order")
-                        .WithOne("ProducedMaterial")
-                        .HasForeignKey("StudyAndOrder.Core.Models.OrderProducedMaterialLine", "OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Material");
-
-                    b.Navigation("Order");
                 });
 
             modelBuilder.Entity("Material", b =>

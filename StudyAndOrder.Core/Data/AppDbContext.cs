@@ -18,36 +18,44 @@ namespace StudyAndOrder.Core.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Study → Orders (en studie har mange ordrer)
+            // Study → Orders
             modelBuilder.Entity<Study>()
                 .HasMany(s => s.Orders)
                 .WithOne(o => o.Study)
                 .HasForeignKey(o => o.StudyId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Order → IngoingMaterials (en ordre har mange indgående materialer)
+            // Order → IngoingMaterials
             modelBuilder.Entity<Order>()
                 .HasMany(o => o.IngoingMaterials)
                 .WithOne(i => i.Order)
                 .HasForeignKey(i => i.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Gem ProcessOrderType som tekst i databasen
+            // Gem ProcessOrderType som tekst
             modelBuilder.Entity<Study>()
                 .Property(s => s.ProcessOrderType)
                 .HasConversion<string>();
 
-            // Order -> ProducedMaterial (1..1)
+            // Order → ProducedMaterial (1..1)
             modelBuilder.Entity<Order>()
                 .HasOne(o => o.ProducedMaterial)
                 .WithOne(p => p.Order)
                 .HasForeignKey<OrderProducedMaterialLine>(p => p.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // ProducedMaterial -> Equipments (many-to-many)
+            // ProducedMaterial → Equipments (many-to-many)
             modelBuilder.Entity<OrderProducedMaterialLine>()
                 .HasMany(p => p.Equipments)
                 .WithMany(e => e.ProducedMaterialLines);
+
+            // Materials → OrderProducedMaterialLine
+
+            modelBuilder.Entity<OrderProducedMaterialLine>()
+                .HasOne(p => p.Material)
+                .WithMany(m => m.ProducedMaterialLines)
+                .HasForeignKey(p => p.MaterialId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
